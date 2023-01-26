@@ -34,16 +34,31 @@ function App() {
     setIsLoading(true);
     //HTTP request return a promise we should wait the response to continue working with
     try {
+      //get movies using Firebase API
       const response = await fetch(
         "https://react-http-79508-default-rtdb.firebaseio.com/movies.json"
       );
+      //Or using Swapi API
+      //const response = await fetch("https://swapi.dev/api/films");
+
       //Axios throw error messages automatically but with fetch we should throw manually
       if (!response.ok) {
         throw new Error("Something Went wrong!");
       }
       //wait for the transformation from json to JS object
       const data = await response.json();
-      const transformedMovies = data.results.map((movie) => {
+      const loadedMovies = [];
+      for (const key in data) {
+        loadedMovies.push({
+          id: key,
+          title: data[key].title,
+          openingText: data[key].openingText,
+          releaseDate: data[key].releaseDate,
+        });
+      }
+      setMovies(loadedMovies);
+      //Using SWAPI
+      /* const transformedMovies = data.results.map((movie) => {
         return {
           id: movie.episode_id,
           title: movie.title,
@@ -51,22 +66,34 @@ function App() {
           releaseDate: movie.release_date,
         };
       });
-      setMovies(transformedMovies);
+      setMovies(transformedMovies); */
     } catch (error) {
       setError(error.message);
     }
     setIsLoading(false);
   });
-  useEffect(fetchMoviesHandler(), [fetchMoviesHandler]);
+
+  useEffect(() => {
+    fetchMoviesHandler();
+  }, []);
+
+  const addMovieHandler = async (movie) => {
+    await fetch(
+      "https://react-http-79508-default-rtdb.firebaseio.com/movies.json",
+      {
+        method: "POST",
+        //convert JS object to json format
+        body: JSON.stringify(movie),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  };
   let content = <p>Found No Movies </p>;
   if (movies.length > 0) content = <MoviesList movies={movies} />;
   if (error) content = <p>{error}</p>;
   if (isLoading) content = <p>Loading...</p>;
-
-  const addMovieHandler = (movie) => {
-    console.log(movie);
-  };
-
   return (
     <React.Fragment>
       <section>
