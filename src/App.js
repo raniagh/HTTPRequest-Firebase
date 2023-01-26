@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import MoviesList from "./components/MoviesList";
 import "./App.css";
+import AddMovie from "./components/AddMovie";
 
 function App() {
   const [movies, setMovies] = useState([]);
@@ -28,11 +29,14 @@ function App() {
   } */
 
   //handle promise with Async/await
-  async function fetchMoviesHandler() {
+  //useCallback ensure that we run
+  const fetchMoviesHandler = useCallback(async () => {
     setIsLoading(true);
     //HTTP request return a promise we should wait the response to continue working with
     try {
-      const response = await fetch("https://swapi.dev/api/films/");
+      const response = await fetch(
+        "https://react-http-79508-default-rtdb.firebaseio.com/movies.json"
+      );
       //Axios throw error messages automatically but with fetch we should throw manually
       if (!response.ok) {
         throw new Error("Something Went wrong!");
@@ -52,14 +56,22 @@ function App() {
       setError(error.message);
     }
     setIsLoading(false);
-  }
+  });
+  useEffect(fetchMoviesHandler(), [fetchMoviesHandler]);
   let content = <p>Found No Movies </p>;
   if (movies.length > 0) content = <MoviesList movies={movies} />;
   if (error) content = <p>{error}</p>;
   if (isLoading) content = <p>Loading...</p>;
 
+  const addMovieHandler = (movie) => {
+    console.log(movie);
+  };
+
   return (
     <React.Fragment>
+      <section>
+        <AddMovie onAddMovie={addMovieHandler} />
+      </section>
       <section>
         <button onClick={fetchMoviesHandler}>Fetch Movies</button>
       </section>
